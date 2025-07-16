@@ -41,3 +41,31 @@ game:GetService("UserInputService").InputChanged:Connect(function(input)
     end
 end)
 
+-- PET SPAWN KODU
+local rep = game:GetService("ReplicatedStorage")
+local player = game.Players.LocalPlayer
+local textbox = frame.TextBox -- TextBox'un ismi
+local button = frame.TextButton -- Butonun ismi
+local label = frame.TextLabel -- Sonuç gösterecek TextLabel
+
+button.MouseButton1Click:Connect(function()
+    local petName = textbox.Text
+    local petModel = rep:FindFirstChild(petName)
+    if petModel then
+        local newPet = petModel:Clone()
+        newPet.Parent = workspace
+        -- Karakterin önüne spawn et
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp and newPet.PrimaryPart then
+            newPet:SetPrimaryPartCFrame(hrp.CFrame * CFrame.new(0, 0, -5))
+            label.Text = "Successful✅"
+        else
+            label.Text = "Unsuccessful❌"
+        end
+    else
+        label.Text = "Unsuccessful❌"
+    end
+    task.wait(1.5)
+    label.Text = "Click to item pets"
+end)
