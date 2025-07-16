@@ -33,12 +33,12 @@ MainTab:CreateButton({
     Name = "10 Free Spin",
     Callback = function()
         local player = game.Players.LocalPlayer
-        if player:FindFirstChild("FreeSpins") then
-            player.FreeSpins.Value = player.FreeSpins.Value + 10
+        if player:FindFirstChild("CandyWheel") then
+            player.CandyWheel.Value = player.CandyWheel.Value + 10
         else
             Rayfield:Notify({
                 Title = "Hata",
-                Content = "FreeSpins değeri bulunamadı!",
+                Content = "CandyWheel değeri bulunamadı!",
                 Duration = 3
             })
         end
