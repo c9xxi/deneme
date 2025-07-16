@@ -52,17 +52,25 @@ button.MouseButton1Click:Connect(function()
         return nil
     end
     local petModel = deepSearch(rep)
-    if petModel and petModel:IsA("Model") then
+    if petModel then
         local newPet = petModel:Clone()
         newPet.Parent = workspace
         local char = player.Character or player.CharacterAdded:Wait()
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
-        if hrp and newPet.PrimaryPart then
-            newPet:SetPrimaryPartCFrame(hrp.CFrame * CFrame.new(0, 0, -5))
-            label.Text = "Successful✅"
+        if hrp then
+            if newPet:IsA("Model") and newPet.PrimaryPart then
+                newPet:SetPrimaryPartCFrame(hrp.CFrame * CFrame.new(0, 0, -5))
+                label.Text = "Successful✅"
+            elseif newPet:IsA("BasePart") then
+                newPet.CFrame = hrp.CFrame * CFrame.new(0, 0, -5)
+                label.Text = "Successful✅"
+            else
+                label.Text = "Unsuccessful❌"
+                warn("Modelin PrimaryPart'ı yok veya obje uygun değil!")
+            end
         else
             label.Text = "Unsuccessful❌"
-            warn("PrimaryPart eksik veya karakter bulunamadı!")
+            warn("Karakter veya HumanoidRootPart bulunamadı!")
         end
     else
         label.Text = "Unsuccessful❌"
