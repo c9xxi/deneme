@@ -32,18 +32,16 @@ local MainTab = Window:CreateTab("Main", 4483362458) -- İstediğiniz bir icon I
 MainTab:CreateButton({
     Name = "Spawn La Vacca Saturno Saturnita",
     Callback = function()
-        -- Buraya pet spawn kodunu ekleyin
-        -- Örnek spawn kodu (oyuna göre değişebilir)
         local petName = "La Vacca Saturno Saturnita"
         local player = game.Players.LocalPlayer
-        local hole = workspace:FindFirstChild("Hole") -- Delik objesinin adı "Hole" ise
-        if hole then
-            -- Pet modelini ReplicatedStorage'dan alıp delikten spawn et
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        if humanoidRootPart then
             local petModel = game.ReplicatedStorage:FindFirstChild(petName)
             if petModel then
                 local newPet = petModel:Clone()
                 newPet.Parent = workspace
-                newPet:SetPrimaryPartCFrame(hole.CFrame + Vector3.new(0, 2, 0))
+                newPet:SetPrimaryPartCFrame(humanoidRootPart.CFrame * CFrame.new(0, 0, -5))
             else
                 Rayfield:Notify({
                     Title = "Hata",
@@ -54,10 +52,24 @@ MainTab:CreateButton({
         else
             Rayfield:Notify({
                 Title = "Hata",
-                Content = "Delik (Hole) bulunamadı!",
+                Content = "Karakter bulunamadı!",
                 Duration = 3
             })
         end
+    end,
+})
+
+MainTab:CreateButton({
+    Name = "Workspace Objelerini Konsola Yazdır",
+    Callback = function()
+        for i, v in pairs(workspace:GetChildren()) do
+            print(v.Name)
+        end
+        Rayfield:Notify({
+            Title = "Bilgi",
+            Content = "Workspace objeleri F9 konsolunda listelendi!",
+            Duration = 3
+        })
     end,
 })
 
