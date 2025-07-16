@@ -27,21 +27,19 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
-local MainTab = Window:CreateTab("Main", 4483362458) -- İstediğiniz bir icon ID'si kullanabilirsiniz
+local MainTab = Window:CreateTab("Main", 4483362458)
 
 MainTab:CreateButton({
     Name = "Spawn La Vacca Saturno Saturnita",
     Callback = function()
         local petName = "La Vacca Saturno Saturnita"
-        local player = game.Players.LocalPlayer
-        local character = player.Character or player.CharacterAdded:Wait()
-        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-        if humanoidRootPart then
+        local hole = workspace:FindFirstChild("SpawnLocation")
+        if hole then
             local petModel = game.ReplicatedStorage:FindFirstChild(petName)
             if petModel then
                 local newPet = petModel:Clone()
                 newPet.Parent = workspace
-                newPet:SetPrimaryPartCFrame(humanoidRootPart.CFrame * CFrame.new(0, 0, -5))
+                newPet:SetPrimaryPartCFrame(hole.CFrame + Vector3.new(0, 2, 0))
             else
                 Rayfield:Notify({
                     Title = "Hata",
@@ -52,7 +50,7 @@ MainTab:CreateButton({
         else
             Rayfield:Notify({
                 Title = "Hata",
-                Content = "Karakter bulunamadı!",
+                Content = "Delik (SpawnLocation) bulunamadı!",
                 Duration = 3
             })
         end
