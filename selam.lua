@@ -58,14 +58,46 @@ MainTab:CreateButton({
 })
 
 MainTab:CreateButton({
-    Name = "Workspace Objelerini Konsola Yazdır",
+    Name = "Pet Nerede? (Konsola Yazdır)",
     Callback = function()
-        for i, v in pairs(workspace:GetChildren()) do
-            print(v.Name)
+        local petName = "La Vacca Saturno Saturnita"
+        local found = false
+        -- Workspace
+        if workspace:FindFirstChild(petName) then
+            print(petName .. " Workspace içinde bulundu!")
+            found = true
+        end
+        -- ReplicatedStorage
+        if game.ReplicatedStorage:FindFirstChild(petName) then
+            print(petName .. " ReplicatedStorage içinde bulundu!")
+            found = true
+        end
+        -- ServerStorage
+        if game:GetService("ServerStorage"):FindFirstChild(petName) then
+            print(petName .. " ServerStorage içinde bulundu!")
+            found = true
+        end
+        -- StarterPack
+        if game:GetService("StarterPack"):FindFirstChild(petName) then
+            print(petName .. " StarterPack içinde bulundu!")
+            found = true
+        end
+        -- StarterPlayer
+        if game:GetService("StarterPlayer"):FindFirstChild(petName) then
+            print(petName .. " StarterPlayer içinde bulundu!")
+            found = true
+        end
+        -- Lighting
+        if game:GetService("Lighting"):FindFirstChild(petName) then
+            print(petName .. " Lighting içinde bulundu!")
+            found = true
+        end
+        if not found then
+            print(petName .. " hiçbir ana klasörde bulunamadı!")
         end
         Rayfield:Notify({
             Title = "Bilgi",
-            Content = "Workspace objeleri F9 konsolunda listelendi!",
+            Content = "Petin yeri F9 konsolunda!",
             Duration = 3
         })
     end,
