@@ -2,13 +2,13 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "Pet Spawner",
-    LoadingTitle = "Pet Spawner GUI",
-    LoadingSubtitle = "by selam",
+    Name = "Spin GUI",
+    LoadingTitle = "Spin GUI",
+    LoadingSubtitle = "by Assistant",
     ConfigurationSaving = {
         Enabled = true,
         FolderName = nil,
-        FileName = "PetSpawnerConfig"
+        FileName = "SpinConfig"
     },
     Discord = {
         Enabled = false,
@@ -17,7 +17,7 @@ local Window = Rayfield:CreateWindow({
     },
     KeySystem = false,
     KeySettings = {
-        Title = "Pet Spawner",
+        Title = "Spin GUI",
         Subtitle = "Key System",
         Note = "No key needed",
         FileName = "Key",
@@ -30,16 +30,15 @@ local Window = Rayfield:CreateWindow({
 local MainTab = Window:CreateTab("Main", 4483362458)
 
 MainTab:CreateButton({
-    Name = "Spawn La Vacca Saturno Saturnita",
+    Name = "10 Free Spin",
     Callback = function()
-        local rep = game:GetService("ReplicatedStorage")
-        local spawnPetEvent = rep:FindFirstChild("SpawnPet")
-        if spawnPetEvent then
-            spawnPetEvent:FireServer("La Vacca Saturno Saturnita")
+        local player = game.Players.LocalPlayer
+        if player:FindFirstChild("FreeSpins") then
+            player.FreeSpins.Value = player.FreeSpins.Value + 10
         else
             Rayfield:Notify({
                 Title = "Hata",
-                Content = "SpawnPet eventi bulunamadı!",
+                Content = "FreeSpins değeri bulunamadı!",
                 Duration = 3
             })
         end
