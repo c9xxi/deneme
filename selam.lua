@@ -45,4 +45,38 @@ MainTab:CreateButton({
     end,
 })
 
+MainTab:CreateButton({
+    Name = "Spin Kodlarını Konsola Yazdır",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        print("[Player Değerleri]:")
+        for i, v in pairs(player:GetChildren()) do
+            print(v.Name)
+        end
+        if player:FindFirstChild("leaderstats") then
+            print("[leaderstats Değerleri]:")
+            for i, v in pairs(player.leaderstats:GetChildren()) do
+                print(v.Name)
+            end
+        end
+        if player:FindFirstChild("PlayerGui") then
+            print("[PlayerGui Değerleri]:")
+            for i, v in pairs(player.PlayerGui:GetChildren()) do
+                print(v.Name)
+            end
+        end
+        if player.Character then
+            print("[Character Değerleri]:")
+            for i, v in pairs(player.Character:GetChildren()) do
+                print(v.Name)
+            end
+        end
+        Rayfield:Notify({
+            Title = "Bilgi",
+            Content = "Spin ile ilgili tüm değerler F9 konsolunda!",
+            Duration = 3
+        })
+    end,
+})
+
 Rayfield:Load()
