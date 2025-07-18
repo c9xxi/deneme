@@ -1,7 +1,3 @@
--- Rayfield kütüphanesinin mevcut olduğunu varsayıyoruz.
--- Eğer Rayfield global'de tanımlı değilse, bu script çalışmayacaktır.
--- Genellikle executor'lar Rayfield'ı otomatik olarak yükler.
-
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -149,10 +145,7 @@ Rayfield:CreateButton(
         -- Oyuncunun ismini al
         local playerName = LocalPlayer.Name
 
-        -- Oyuncunun baseni bulmaya çalış (Bu kısım oyundan oyuna değişir!)
-        -- Bu örnek kod, oyun içinde "Base" adında bir nesne arar.
-        -- Gerçek bir oyunda, kendi baseninizi temsil eden objenin adını veya nasıl bulunacağını bilmeniz gerekir.
-        -- Örneğin, bazı oyunlar oyuncunun kullanıcı adına göre bir base objesi oluşturur.
+        
         local targetBase = workspace:FindFirstChild(playerName .. "'s Base") -- Örnek: "PlayerName's Base"
         if not targetBase then
             targetBase = workspace:FindFirstChild("Base") -- Genel bir "Base" objesi
