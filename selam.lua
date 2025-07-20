@@ -28,12 +28,7 @@ madeBy.BackgroundTransparency = 1
 madeBy.Font = Enum.Font.SourceSans
 madeBy.TextSize = 14
 
--- Flags
-local isBypassActive = false
-local isGlitchActive = false
-
--- sayaç
-local function runCounter(callback)
+local function runCounter(duration, callback)
 	local counter = Instance.new("TextLabel", frame)
 	counter.Size = UDim2.new(1, 0, 0, 30)
 	counter.Position = UDim2.new(0, 0, 0, 40)
@@ -44,14 +39,13 @@ local function runCounter(callback)
 	counter.TextSize = 20
 	for i = 0, 100 do
 		counter.Text = tostring(i) .. "%"
-		wait(15/100)
+		wait(duration/100)
 	end
 	counter:Destroy()
 	if callback then callback() end
 end
 
--- buton
-local function createButton(name, posY, onClick, flagName)
+local function createButton(name, posY, onClick, flagName, duration)
 	local btn = Instance.new("TextButton", frame)
 	btn.Size = UDim2.new(0.9, 0, 0, 40)
 	btn.Position = UDim2.new(0.05, 0, 0, posY)
@@ -65,7 +59,7 @@ local function createButton(name, posY, onClick, flagName)
 		if not _G[flagName] then
 			btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 			btn.Text = name.." (ON)"
-			runCounter(function()
+			runCounter(duration, function()
 				_G[flagName] = true
 				onClick()
 			end)
@@ -77,30 +71,67 @@ local function createButton(name, posY, onClick, flagName)
 	end)
 end
 
--- Anti Cheat Bypass
 createButton("Bypass Anti Cheat", 60, function()
-	print("Anti Cheat koruması aktif!")
-	-- Basit Bypass: Server’dan gelen kick vb. olayları engellemeye çalışır
+	print("Gelişmiş Anti Cheat koruması aktif!")
+
 	local mt = getrawmetatable(game)
 	setreadonly(mt, false)
-	local old = mt.__namecall
+	local oldNamecall = mt.__namecall
+	local oldIndex = mt.__index
 
 	mt.__namecall = newcclosure(function(self, ...)
-		local args = {...}
 		local method = getnamecallmethod()
-		if tostring(method) == "Kick" then
-			warn("Anti Cheat Kick Engellendi!")
+		if tostring(method):lower() == "kick" then
+			warn("[AntiCheat] Kick denemesi engellendi.")
 			return
 		end
-		return old(self, unpack(args))
+		return oldNamecall(self, ...)
 	end)
-end, "isBypassActive")
 
--- Glitch Trade
+	mt.__index = newcclosure(function(self, key)
+		if tostring(key):lower() == "kick" then
+			warn("[AntiCheat] Kick (index) engellendi.")
+			return function() end
+		end
+		return oldIndex(self, key)
+	end)
+
+	player.CharacterAdded:Connect(function(char)
+		local hum = char:WaitForChild("Humanoid")
+		hum:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+			if hum.WalkSpeed < 16 then
+				hum.WalkSpeed = 16
+				warn("[AntiCheat] WalkSpeed resetlendi.")
+			end
+		end)
+		hum:GetPropertyChangedSignal("JumpPower"):Connect(function()
+			if hum.JumpPower < 50 then
+				hum.JumpPower = 50
+				warn("[AntiCheat] JumpPower resetlendi.")
+			end
+		end)
+	end)
+
+	for _,v in pairs(game:GetDescendants()) do
+		if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+			v.OnClientEvent:Connect(function(...)
+				local args = {...}
+				for i,v in ipairs(args) do
+					if tostring(v):lower():find("log") then
+						warn("[AntiCheat] Loglama RemoteEvent’i iptal edildi.")
+						return
+					end
+				end
+			end)
+		end
+	end
+
+end, "isBypassActive", 15)
+
 createButton("Glitch Trade", 110, function()
 	print("Trade glitch başlıyor!")
 	local function autoAccept()
-		local tradeUI = player.PlayerGui:FindFirstChild("TradeUI") -- isim oyuna göre değişir
+		local tradeUI = player.PlayerGui:FindFirstChild("TradeUI") -- isim oyuna göre değişebilir
 		if tradeUI then
 			local myAccept = tradeUI:FindFirstChild("MyAcceptButton")
 			local theirAccept = tradeUI:FindFirstChild("TheirAcceptButton")
@@ -116,4 +147,4 @@ createButton("Glitch Trade", 110, function()
 		end
 	end
 	autoAccept()
-end, "isGlitchActive")
+end, "isGlitchActive", 7)
