@@ -1,186 +1,119 @@
--- Rayfield kütüphanesinin mevcut olduğunu varsayıyoruz.
--- Eğer Rayfield global'de tanımlı değilse, bu script çalışmayacaktır.
--- Genellikle executor'lar Rayfield'ı otomatik olarak yükler.
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local screenGui = Instance.new("ScreenGui", player.PlayerGui)
+screenGui.Name = "AdoptMeScriptGUI"
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local frame = Instance.new("Frame", screenGui)
+frame.Size = UDim2.new(0, 300, 0, 200)
+frame.Position = UDim2.new(0.5, -150, 0.5, -100)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true -- 🟢 GUI taşınabilir
 
--- Oyuncunun orijinal yürüme hızını saklayacak değişken
-local originalWalkSpeed = nil
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Text = "Adopt Me Script"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
 
--- NoClip durumunu kontrol eden değişken
-local noClipActive = false
+local madeBy = Instance.new("TextLabel", frame)
+madeBy.Size = UDim2.new(1, 0, 0, 20)
+madeBy.Position = UDim2.new(0, 0, 1, -20)
+madeBy.Text = "Made by sxx21"
+madeBy.TextColor3 = Color3.fromRGB(200, 200, 200)
+madeBy.BackgroundTransparency = 1
+madeBy.Font = Enum.Font.SourceSans
+madeBy.TextSize = 14
 
--- Steal butonunun tekrar tekrar basılmasını önlemek için gecikme
-local lastStealTime = 0
-local stealCooldown = 2 -- 2 saniye bekleme süresi
+-- Flags
+local isBypassActive = false
+local isGlitchActive = false
 
--- Rayfield UI'ı oluştur
-local Rayfield = Rayfield -- Genellikle executor'lar Rayfield'ı global olarak tanımlar
+-- sayaç
+local function runCounter(callback)
+	local counter = Instance.new("TextLabel", frame)
+	counter.Size = UDim2.new(1, 0, 0, 30)
+	counter.Position = UDim2.new(0, 0, 0, 40)
+	counter.Text = "0%"
+	counter.TextColor3 = Color3.fromRGB(255, 255, 255)
+	counter.BackgroundTransparency = 1
+	counter.Font = Enum.Font.SourceSansBold
+	counter.TextSize = 20
+	for i = 0, 100 do
+		counter.Text = tostring(i) .. "%"
+		wait(15/100)
+	end
+	counter:Destroy()
+	if callback then callback() end
+end
 
-Rayfield:LoadUI(
-    {
-        Name = "Main Panel",
-        Icon = "rbxassetid://6022879685", -- İstediğin bir ikon ID'si
-        Color = Color3.fromRGB(0, 150, 255), -- Rayfield arayüz rengi
-        PanelDragging = true, -- Paneli sürükleyebilirsin
-        PanelMinimizing = true -- Paneli küçültebilirsin
-    }
-)
+-- buton
+local function createButton(name, posY, onClick, flagName)
+	local btn = Instance.new("TextButton", frame)
+	btn.Size = UDim2.new(0.9, 0, 0, 40)
+	btn.Position = UDim2.new(0.05, 0, 0, posY)
+	btn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+	btn.Text = name.." (OFF)"
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.Font = Enum.Font.SourceSansBold
+	btn.TextSize = 16
 
----
-### **Main Sekmesi**
+	btn.MouseButton1Click:Connect(function()
+		if not _G[flagName] then
+			btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+			btn.Text = name.." (ON)"
+			runCounter(function()
+				_G[flagName] = true
+				onClick()
+			end)
+		else
+			btn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+			btn.Text = name.." (OFF)"
+			_G[flagName] = false
+		end
+	end)
+end
 
-Rayfield:CreateTab("Main")
+-- Anti Cheat Bypass
+createButton("Bypass Anti Cheat", 60, function()
+	print("Anti Cheat koruması aktif!")
+	-- Basit Bypass: Server’dan gelen kick vb. olayları engellemeye çalışır
+	local mt = getrawmetatable(game)
+	setreadonly(mt, false)
+	local old = mt.__namecall
 
----
-#### **Speed Özelliği**
+	mt.__namecall = newcclosure(function(self, ...)
+		local args = {...}
+		local method = getnamecallmethod()
+		if tostring(method) == "Kick" then
+			warn("Anti Cheat Kick Engellendi!")
+			return
+		end
+		return old(self, unpack(args))
+	end)
+end, "isBypassActive")
 
-Rayfield:CreateToggle(
-    "Main", -- Sekme adı
-    "Speed", -- Toggle adı
-    "Açıldığında hızınızı 50 yapar, kapatıldığında orijinal hızınıza döner.", -- Açıklama
-    function(state)
-        local character = LocalPlayer.Character
-        if not character or not character:FindFirstChildOfClass("Humanoid") then return end
-
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-
-        if state then
-            -- Eğer Speed aktif ediliyorsa
-            if originalWalkSpeed == nil then
-                originalWalkSpeed = humanoid.WalkSpeed -- Orijinal hızı kaydet
-            end
-            humanoid.WalkSpeed = 50 -- Hızı 50 yap
-        else
-            -- Eğer Speed kapatılıyorsa
-            if originalWalkSpeed ~= nil then
-                humanoid.WalkSpeed = originalWalkSpeed -- Orijinal hıza dön
-                originalWalkSpeed = nil -- Orijinal hızı sıfırla
-            else
-                -- Eğer orijinal hız kaydedilmediyse (örneğin script yeni çalıştırıldıysa), varsayılan hıza dön
-                humanoid.WalkSpeed = 16 -- Roblox varsayılan hızı
-            end
-        end
-    end
-)
-
----
-#### **NoClip Özelliği**
-
-Rayfield:CreateToggle(
-    "Main", -- Sekme adı
-    "NoClip", -- Toggle adı
-    "Duvarlardan ve nesnelerden geçmenizi sağlar.", -- Açıklama
-    function(state)
-        noClipActive = state
-        local character = LocalPlayer.Character
-        if not character then return end
-
-        for _, part in ipairs(character:GetChildren()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = not state -- Açıkken CanCollide'ı false yap, kapalıyken true
-            end
-        end
-
-        -- Karakter her yeniden yüklendiğinde (ölünce vb.) NoClip'i tekrar uygulamak için
-        LocalPlayer.CharacterAdded:Connect(function(newCharacter)
-            if noClipActive then
-                for _, part in ipairs(newCharacter:GetChildren()) do
-                    if part:IsA("BasePart") then
-                        part.CanCollide = false
-                    end
-                end
-            end
-        end)
-    end
-)
-
----
-#### **Steal Butonu**
-
-Rayfield:CreateButton(
-    "Main", -- Sekme adı
-    "Steal Pet & Teleport", -- Buton adı
-    "Elinizde pet varken sizi kendi basenize ışınlar. (2 saniye bekleme süresi)", -- Açıklama
-    function()
-        local currentTime = tick()
-        if currentTime - lastStealTime < stealCooldown then
-            Rayfield:Notify(
-                "Steal",
-                "Çok hızlısın! Lütfen bekle.",
-                5 -- Bildirim süresi (saniye)
-            )
-            return
-        end
-        lastStealTime = currentTime
-
-        local character = LocalPlayer.Character
-        if not character or not character:FindFirstChildOfClass("Humanoid") then
-            Rayfield:Notify(
-                "Steal",
-                "Karakterin bulunamadı.",
-                5
-            )
-            return
-        end
-
-        -- Oyuncunun elinde bir pet olup olmadığını kontrol et
-        local hasPet = false
-        for _, child in ipairs(character:GetChildren()) do
-            -- Pet'in genellikle bir "Handle" veya benzeri bir kısmı olur
-            -- Bu kısım oyunlara göre değişebilir. Bu bir örnek kontroldür.
-            if child:IsA("Model") and child:FindFirstChild("Handle") then -- Basit bir pet kontrolü
-                hasPet = true
-                break
-            end
-        end
-
-        if not hasPet then
-            Rayfield:Notify(
-                "Steal",
-                "Elinizde bir pet bulunamadı!",
-                5
-            )
-            return
-        end
-
-        -- Oyuncunun ismini al
-        local playerName = LocalPlayer.Name
-
-        -- Oyuncunun baseni bulmaya çalış (Bu kısım oyundan oyuna değişir!)
-        -- Bu örnek kod, oyun içinde "Base" adında bir nesne arar.
-        -- Gerçek bir oyunda, kendi baseninizi temsil eden objenin adını veya nasıl bulunacağını bilmeniz gerekir.
-        -- Örneğin, bazı oyunlar oyuncunun kullanıcı adına göre bir base objesi oluşturur.
-        local targetBase = workspace:FindFirstChild(playerName .. "'s Base") -- Örnek: "PlayerName's Base"
-        if not targetBase then
-            targetBase = workspace:FindFirstChild("Base") -- Genel bir "Base" objesi
-        end
-
-        if targetBase and targetBase:IsA("BasePart") then
-            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-            if humanoidRootPart then
-                -- Basenin üstüne ışınla
-                humanoidRootPart.CFrame = CFrame.new(targetBase.Position + Vector3.new(0, targetBase.Size.Y / 2 + 3, 0))
-                Rayfield:Notify(
-                    "Steal",
-                    "Pet ile basenize ışınlandınız!",
-                    3
-                )
-            else
-                Rayfield:Notify(
-                    "Steal",
-                    "HumanoidRootPart bulunamadı.",
-                    5
-                )
-            end
-        else
-            Rayfield:Notify(
-                "Steal",
-                "Baseniz bulunamadı! Lütfen scripti oyununuza göre ayarlayın.",
-                8
-            )
-        end
-    end
-)
+-- Glitch Trade
+createButton("Glitch Trade", 110, function()
+	print("Trade glitch başlıyor!")
+	local function autoAccept()
+		local tradeUI = player.PlayerGui:FindFirstChild("TradeUI") -- isim oyuna göre değişir
+		if tradeUI then
+			local myAccept = tradeUI:FindFirstChild("MyAcceptButton")
+			local theirAccept = tradeUI:FindFirstChild("TheirAcceptButton")
+			if myAccept and theirAccept then
+				myAccept.MouseButton1Click:Fire()
+				wait(0.5)
+				theirAccept.MouseButton1Click:Fire()
+			else
+				warn("Trade UI butonları bulunamadı.")
+			end
+		else
+			warn("Trade UI bulunamadı.")
+		end
+	end
+	autoAccept()
+end, "isGlitchActive")
